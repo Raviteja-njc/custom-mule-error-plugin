@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:azure-service-bus-messaging="http://www.mulesoft.org/schema/mule/azure-service-bus-messaging"
+  xmlns:module-logger="http://www.mulesoft.org/schema/mule/module-logger" xmlns="http://www.mulesoft.org/schema/mule/core"
+  xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/module-logger http://www.mulesoft.org/schema/mule/module-logger/current/mule-module-logger.xsd
+http://www.mulesoft.org/schema/mule/azure-service-bus-messaging http://www.mulesoft.org/schema/mule/azure-service-bus-messaging/current/mule-azure-service-bus-messaging.xsd">
+  <error-handler name="mph-eip-utility-api-error-handler" doc:id="776dfe5a-cb28-45fd-93d2-6ec3b4e04451">
+    <on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue"
+      doc:id="07ac85fb-f57c-45eb-9b09-aaadf99e0fe3" type="ANY">
+      <set-variable value="#[error.muleMessage.attributes.StatusCode default 500]" doc:name="httpStatus"
+        doc:id="b29d2380-ef56-4b85-b474-018d6f992e8b" variableName="httpStatus" />
+      <set-payload
+        value="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	&quot;applicationName&quot;: Mule::p('app.name'),&#10;	&quot;applicationVersion&quot;: Mule::p('app.version'),&#10;	&quot;environment&quot;: Mule::p('mule.env'),&#10;	&quot;status&quot;: &quot;DOWN&quot;,&#10;	&quot;timeStamp&quot;: now()&#10;}]"
+        doc:name="Set Utility Response" doc:id="a8b6b73e-0375-4520-a550-7f3585fc9a41" />
+      <module-logger:exception doc:name="Exception" doc:id="68217085-286d-48f5-9632-a39fc441fbc0"
+        config-ref="MPH_Logger_Config" message='#[payload]' />
+    </on-error-continue>
+  </error-handler>
+</mule>

@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+  <flow name="custom-error-mappings-flow" doc:id="eb15318b-53f1-48e1-85f9-78e720906fe6" doc:description="This Flow is solely to be used as a place-holder for mph-eip-error-handler.xml&#10;&#10;Reason: This is being done to avoid compilation error where the custom errors within the mph-eip-error-handler.xml are not define in your application.">
+    <choice doc:name="Choice" doc:id="25fc028e-8587-4ee7-99a5-2b9f0eb0c179">
+      <when expression='#[payload.errorType == "DFD:BAD_REQUEST"]'>
+        <raise-error doc:name="DFD:BAD_REQUEST" doc:id="069122bc-ca81-4fb9-b3a5-1a9eb009f63c" type="DFD:BAD_REQUEST"
+          description="dfd bad request" />
+      </when>
+      <when expression='#[payload.errorType == "DFD:CLIENT_SECURITY"]'>
+        <raise-error doc:name="DFD:CLIENT_SECURITY" doc:id="d6d28687-0604-4c79-b3f1-761b86f51825" type="DFD:CLIENT_SECURITY"
+          description="dfd client security" />
+      </when>
+      <when expression='#[payload.errorType == "DFD:CONNECTIVITY"]'>
+        <raise-error doc:name="DFD:CONNECTIVITY" doc:id="a4bd6e52-3691-4c2e-a282-267c37dd824f" type="DFD:CONNECTIVITY"
+          description="dfd connectivity" />
+      </when>
+      <when expression='#[payload.errorType == "DFD:FORBIDDEN"]'>
+        <raise-error doc:name="DFD:FORBIDDEN" doc:id="1fb35a62-08ea-4dbf-b44c-e350e2bf6758" type="DFD:FORBIDDEN"
+          description="dfd forbidden" />
+      </when>
+      <when expression='#[payload.errorType == "DFD:INTERNAL_SERVER_ERROR"]'>
+        <raise-error doc:name="DFD:INTERNAL_SERVER_ERROR" doc:id="4283370d-11c6-4050-8f89-bb940004cacb"
+          type="DFD:INTERNAL_SERVER_ERROR" description="dfd internal server error" />
+      
+</when>
+      <when expression='#[payload.errorType == "DFD:METHOD_NOT_ALLOWED"]'>
+        <raise-error doc:name="DFD:METHOD_NOT_ALLOWED" doc:id="86b7f989-e805-46d7-bf83-0fd9555dd4a0"
+          type="DFD:METHOD_NOT_ALLOWED" description="dfd method not allowed" />
+      </when>
+      <when expression='#[payload.errorType == "DFD:NOT_ACCEPTABLE"]'>
+        <raise-error doc:name="DFD:NOT_ACCEPTABLE" doc:id="540392ca-b81a-494c-9d41-eb2acc1acdae" type="DFD:NOT_ACCEPTABLE"
+          description="dfd not acceptable" />
+      </when>
+      <when expression='#[payload.errorType == "DFD:NOT_FOUND"]'>
+        <raise-error doc:name="DFD:NOT_FOUND" doc:id="9d964592-b7c8-4bac-8f3e-9dc365f91281" type="DFD:NOT_FOUND"
+          description="dfd not found" />
+      </when>
+      <when expression='#[payload.errorType == "DFD:PARSING"]'>
+        <raise-error doc:name="DFD:PARSING" doc:id="cf46c460-35f6-4ccf-8daa-2f9b6307b2c9" type="DFD:PARSING"
+          description="dfd parsing" />
+      </when>
+      <when expression='#[payload.errorType == "DFD:SECURITY"]'>
+        <raise-error doc:name="DFD:SECURITY" doc:id="bccc8ef8-8d8e-47fe-b7e4-efd3d96e5c5f" type="DFD:SECURITY"
+          description="dfd security" />
+      </when>
+      <when expression='#[payload.errorType == "DFD:TIMEOUT"]'>
+        <raise-error doc:name="DFD:TIMEOUT" doc:id="89bc3cf8-b86f-4374-aee0-908e8be03255" type="DFD:TIMEOUT"
+          description="dfd timeout" />
+      </when>
+      <when expression='#[payload.errorType == "DFD:TOO_MANY_REQUESTS"]'>
+        <raise-error doc:name="DFD:TOO_MANY_REQUESTS" doc:id="1655ac69-1e8b-4de3-919b-a4091fb94429" type="DFD:TOO_MANY_REQUESTS"
+          description="dfd too many requests" />
+      </when>
+      <when expression='#[payload.errorType == "DFD:UNAUTHORIZED"]'>
+        <raise-error doc:name="DFD:UNAUTHORIZED" doc:id="2abe9b74-7c3a-4c49-8186-59fc2dbb2091" type="DFD:UNAUTHORIZED"
+          description="dfd unauthorized" />
+      </when>
+      <when expression='#[payload.errorType == "DFD:UNSUPPORTED_MEDIA_TYPE"]'>
+        <raise-error doc:name="DFD:UNSUPPORTED_MEDIA_TYPE" doc:id="dcce449b-218a-4544-a152-aa7f3d4e0fe9"
+          type="DFD:UNSUPPORTED_MEDIA_TYPE" description="dfd unsupported media type" />
+      </when>
+      <when expression='#[payload.errorType == "DFD:SERVICE_UNAVAILABLE"]'>
+        <raise-error doc:name="DFD:SERVICE_UNAVAILABLE" doc:id="13e5baa7-dde3-4f66-9b52-d9efa7e224f2"
+          type="DFD:SERVICE_UNAVAILABLE" description="dfd service unavailable" />
+      </when>
+      <when expression='#[payload.errorType == "HIS:BAD_REQUEST"]'>
+        <raise-error doc:name="HIS:BAD_REQUEST" doc:id="1504560d-dbc7-4a2c-9892-6b58939b797a" type="HIS:BAD_REQUEST"
+          description="his bad request" />
+      </when>
+      <when expression='#[payload.errorType == "HIS:CLIENT_SECURITY"]'>
+        <raise-error doc:name="HIS:CLIENT_SECURITY" doc:id="75093a96-c391-49e6-8000-2da069d7e99d" type="HIS:CLIENT_SECURITY"
+          description="his client security" />
+      </when>
+      <when expression='#[payload.errorType == "HIS:CONNECTIVITY"]'>
+        <raise-error doc:name="HIS:CONNECTIVITY" doc:id="e2a636a8-6ef6-4d9b-b090-428e83bdcf9f" type="HIS:CONNECTIVITY"
+          description="his connectivity" />
+      </when>
+      <when expression='#[payload.errorType == "HIS:FORBIDDEN"]'>
+        <raise-error doc:name="HIS:FORBIDDEN" doc:id="b3baa356-ed51-45bb-88c3-8116fda708c2" type="HIS:FORBIDDEN"
+          description="his forbidden" />
+      </when>
+      <when expression='#[payload.errorType == "HIS:INTERNAL_SERVER_ERROR"]'>
+        <raise-error doc:name="HIS:INTERNAL_SERVER_ERROR" doc:id="62f32680-4f9e-4cb6-b461-7f70d5ec3318"
+          type="HIS:INTERNAL_SERVER_ERROR" description="his internal server error" />
+      </when>
+      <when expression='#[payload.errorType == "HIS:METHOD_NOT_ALLOWED"]'>
+        <raise-error doc:name="HIS:METHOD_NOT_ALLOWED" doc:id="4d32977f-5bb6-469b-9cab-edb21a1a7698"
+          type="HIS:METHOD_NOT_ALLOWED" description="his method not allowed" />
+      </when>
+      <when expression='#[payload.errorType == "HIS:NOT_ACCEPTABLE"]'>
+        <raise-error doc:name="HIS:NOT_ACCEPTABLE" doc:id="665fc3f7-f442-4ae8-9279-691567c73272" type="HIS:NOT_ACCEPTABLE"
+          description="his not acceptable" />
+      </when>
+      <when expression='#[payload.errorType == "HIS:NOT_FOUND"]'>
+        <raise-error doc:name="HIS:NOT_FOUND" doc:id="150f85e8-09e8-4e0b-b2c8-a73b4517589c" type="HIS:NOT_FOUND"
+          description="his not found" />
+      </when>
+      <when expression='#[payload.errorType == "HIS:PARSING"]'>
+        <raise-error doc:name="HIS:PARSING" doc:id="0137e59a-0278-4968-8284-52460757a676" type="HIS:PARSING"
+          description="his parsing" />
+      </when>
+      <when expression='#[payload.errorType == "HIS:SECURITY"]'>
+        <raise-error doc:name="HIS:SECURITY" doc:id="05c1d5f8-3b6e-421b-ada8-6e8d991ca8da" type="HIS:SECURITY"
+          description="his security" />
+      </when>
+      <when expression='#[payload.errorType == "HIS:TIMEOUT"]'>
+        <raise-error doc:name="HIS:TIMEOUT" doc:id="22586f78-578c-4ff1-ac3d-3d99a9451b9a" type="HIS:TIMEOUT"
+          description="his timeout" />
+      </when>
+      <when expression='#[payload.errorType == "HIS:TOO_MANY_REQUESTS"]'>
+        <raise-error doc:name="HIS:TOO_MANY_REQUESTS" doc:id="7d102987-f5e3-4dab-b0b8-02993e793afd" type="HIS:TOO_MANY_REQUESTS"
+          description="his too many requests" />
+      </when>
+      <when expression='#[payload.errorType == "HIS:UNAUTHORIZED"]'>
+        <raise-error doc:name="HIS:UNAUTHORIZED" doc:id="81960bb5-fade-4cb9-8356-fc6fa1ba2474" type="HIS:UNAUTHORIZED"
+          description="his unauthorized" />
+      </when>
+      <when expression='#[payload.errorType == "HIS:UNSUPPORTED_MEDIA_TYPE"]'>
+        <raise-error doc:name="HIS:UNSUPPORTED_MEDIA_TYPE" doc:id="c243b95a-7e28-4545-bf78-e5c259de543a"
+          type="HIS:UNSUPPORTED_MEDIA_TYPE" description="his unsupported media type" />
+      </when>
+      <when expression='#[payload.errorType == "HIS:SERVICE_UNAVAILABLE"]'>
+        <raise-error doc:name="HIS:SERVICE_UNAVAILABLE" doc:id="9aa8c876-9b12-4ab5-91d3-2f086a68008a"
+          type="HIS:SERVICE_UNAVAILABLE" description="his service unavailable" />
+      </when>
+      <when expression='#[payload.errorType == "MPH_EIP_DFD_EAPI:BAD_REQUEST"]'>
+        <raise-error doc:name="MPH_EIP_DFD_EAPI:BAD_REQUEST" doc:id="3a18e029-c36b-46f8-96f2-1cfca3174020" type="MPH_EIP_DFD_EAPI:BAD_REQUEST" description="schema validation"/>
+      </when>
+      <when expression='#[payload.errorType == "MPH_EIP_CLINICAL_PAPI:BAD_REQUEST"]'>
+        <raise-error doc:name="MPH_EIP_CLINICAL_PAPI:BAD_REQUEST" doc:id="ae47c774-7406-4b04-b25f-8bceb2d747be" type="MPH_EIP_CLINICAL_PAPI:BAD_REQUEST" description="schema validation"/>
+      </when>
+      <otherwise>
+        <set-payload value='#[output application/json --- {&#10;	"message": "no error found"&#10;}]' doc:name="Set Payload"
+          doc:id="70b064e3-e209-4e06-ad45-a9c0cd4c2c43" />
+        <raise-error doc:name="ANY" doc:id="55e6ae80-fd53-4887-858e-f3cecee8233f" type="ANY" description="unknown error" />
+      </otherwise>
+    </choice>
+  </flow>
+</mule>

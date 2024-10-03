@@ -1,0 +1,11 @@
+%dw 2.0
+
+type auto_c91cf11d_6505_4c1f_8178_1a60d32d4bb1_Output_Payload = {|
+  resourceType: String, 
+  issue: {|
+    severity: String, 
+    code: "not-found" | "forbidden" | "processing" | "security" | "throttled" | "duplicate" | "deleted" | "multiple-matches" | "invalid" | "not-supported" | "exception" | "timeout" | "unknown", 
+    details: {| text: String | Binary |}
+  |}
+|}
+

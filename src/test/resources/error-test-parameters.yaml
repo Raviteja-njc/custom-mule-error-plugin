@@ -1,0 +1,209 @@
+apikitbadrequest:
+    errortype: "APIKIT:BAD_REQUEST"
+    expectedstatuscode: "400"
+    namespace: "APIKIT"
+    endpoint: "/v0/api/patient/"
+
+apikitmethodnotallowed:
+    errortype: "APIKIT:METHOD_NOT_ALLOWED"
+    expectedstatuscode: "405"
+    namespace: "APIKIT"
+    endpoint: "/v0/api/patient/"
+
+apikitnotacceptable:
+    errortype: "APIKIT:NOT_ACCEPTABLE"
+    expectedstatuscode: "406"
+    namespace: "APIKIT"
+    endpoint: "/v0/api/patient/"
+
+apikitnotfound:
+    errortype: "APIKIT:NOT_FOUND"
+    expectedstatuscode: "404"
+    namespace: "APIKIT"
+    endpoint: "/v0/api/patient/"
+
+apikitunsupportedmediatype:
+    errortype: "APIKIT:UNSUPPORTED_MEDIA_TYPE"
+    expectedstatuscode: "415"
+    namespace: "APIKIT"
+    endpoint: "/v0/api/patient/"
+    
+scheamvalidationsdfdeapi:
+    errortype: "MPH_EIP_DFD_EAPI:BAD_REQUEST"
+    expectedstatuscode: "400"
+    namespace: ""
+
+scheamvalidationsclinicalpapi:
+    errortype: "MPH_EIP_CLINICAL_PAPI:BAD_REQUEST"
+    expectedstatuscode: "400"
+    namespace: ""
+
+dfdbadrequest:
+    errortype: "DFD:BAD_REQUEST"
+    expectedstatuscode: "400"
+    namespace: ""
+    
+
+dfdclientsecurity:
+    errortype: "DFD:CLIENT_SECURITY"
+    expectedstatuscode: "401"
+    namespace: ""
+    
+
+dfdconnectivity:
+    errortype: "DFD:CONNECTIVITY"
+    expectedstatuscode: "500"
+    namespace: ""
+    
+
+dfdforbidden:
+    errortype: "DFD:FORBIDDEN"
+    expectedstatuscode: "403"
+    namespace: ""
+    
+
+dfdinternalservererror:
+    errortype: "DFD:INTERNAL_SERVER_ERROR"
+    expectedstatuscode: "500"
+    namespace: ""
+    
+
+dfdmethodnotallowed:
+    errortype: "DFD:METHOD_NOT_ALLOWED"
+    expectedstatuscode: "405"
+    namespace: ""
+    
+
+dfdnotacceptable:
+    errortype: "DFD:NOT_ACCEPTABLE"
+    expectedstatuscode: "406"
+    namespace: ""
+    
+
+dfdnotfound:
+    errortype: "DFD:NOT_FOUND"
+    expectedstatuscode: "404"
+    namespace: ""
+    
+
+dfdparsing:
+    errortype: "DFD:PARSING"
+    expectedstatuscode: "400"
+    namespace: ""
+    
+
+dfdsecurity:
+    errortype: "DFD:SECURITY"
+    expectedstatuscode: "401"
+    namespace: ""
+
+dfdtimeout:
+    errortype: "DFD:TIMEOUT"
+    expectedstatuscode: "504"
+    namespace: ""
+
+dfdtoomanyrequests:
+    errortype: "DFD:TOO_MANY_REQUESTS"
+    expectedstatuscode: "429"
+    namespace: ""
+
+dfdunauthorized:
+    errortype: "DFD:UNAUTHORIZED"
+    expectedstatuscode: "401"
+    namespace: ""
+
+dfdunsupportedmediatype:
+    errortype: "DFD:UNSUPPORTED_MEDIA_TYPE"
+    expectedstatuscode: "415"
+    namespace: ""
+
+hisbadrequest:
+    errortype: "HIS:BAD_REQUEST"
+    expectedstatuscode: "400"
+    namespace: ""
+
+hisclientsecurity:
+    errortype: "HIS:CLIENT_SECURITY"
+    expectedstatuscode: "401"
+    namespace: ""
+
+hisconnectivity:
+    errortype: "HIS:CONNECTIVITY"
+    expectedstatuscode: "500"
+    namespace: ""
+
+hisforbidden:
+    errortype: "HIS:FORBIDDEN"
+    expectedstatuscode: "403"
+    namespace: ""
+
+hisinternalservererror:
+    errortype: "HIS:INTERNAL_SERVER_ERROR"
+    expectedstatuscode: "500"
+    namespace: ""
+
+hismethodnotallowed:
+    errortype: "HIS:METHOD_NOT_ALLOWED"
+    expectedstatuscode: "405"
+    namespace: ""
+
+hisnotacceptable:
+    errortype: "HIS:NOT_ACCEPTABLE"
+    expectedstatuscode: "406"
+    namespace: ""
+
+hisnotfound:
+    errortype: "HIS:NOT_FOUND"
+    expectedstatuscode: "404"
+    namespace: ""
+
+hisparsing:
+    errortype: "HIS:PARSING"
+    expectedstatuscode: "400"
+    namespace: ""
+
+hissecurity:
+    errortype: "HIS:SECURITY"
+    expectedstatuscode: "401"
+    namespace: ""
+
+histimeout:
+    errortype: "HIS:TIMEOUT"
+    expectedstatuscode: "504"
+    namespace: ""
+
+histoomanyrequests:
+    errortype: "HIS:TOO_MANY_REQUESTS"
+    expectedstatuscode: "429"
+    namespace: ""
+
+hisunauthorized:
+    errortype: "HIS:UNAUTHORIZED"
+    expectedstatuscode: "401"
+    namespace: ""
+
+hisunsupportedmediatype:
+    errortype: "HIS:UNSUPPORTED_MEDIA_TYPE"
+    expectedstatuscode: "415"
+    namespace: ""
+
+any:
+    errortype: "ANY"
+    expectedstatuscode: "500"
+    namespace: ""
+    endpoint: "/v0/api/patient/"
+
+dfdserviceunavailable:
+    errortype: "DFD:SERVICE_UNAVAILABLE"
+    expectedstatuscode: "503"
+    namespace: ""
+
+hisserviceunavailable:
+    errortype: "HIS:SERVICE_UNAVAILABLE"
+    expectedstatuscode: "503"
+    namespace: ""
+
+apikitchoicedefault:
+    errortype: ""
+    expectedstatuscode: "200"
+    namespace: "APIKIT"

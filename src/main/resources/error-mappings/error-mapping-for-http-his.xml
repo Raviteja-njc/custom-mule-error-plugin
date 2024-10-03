@@ -1,0 +1,32 @@
+<!-- Error mappings for HTTP to HIS -->
+
+<error-mapping sourceType="HTTP:BAD_REQUEST"
+	targetType="HIS:BAD_REQUEST" />
+<error-mapping sourceType="HTTP:CLIENT_SECURITY"
+	targetType="HIS:CLIENT_SECURITY" />
+<error-mapping sourceType="HTTP:CONNECTIVITY"
+	targetType="HIS:CONNECTIVITY" />
+<error-mapping sourceType="HTTP:FORBIDDEN"
+	targetType="HIS:FORBIDDEN" />
+<error-mapping sourceType="HTTP:INTERNAL_SERVER_ERROR"
+	targetType="HIS:INTERNAL_SERVER_ERROR" />
+<error-mapping sourceType="HTTP:METHOD_NOT_ALLOWED"
+	targetType="HIS:METHOD_NOT_ALLOWED" />
+<error-mapping sourceType="HTTP:NOT_ACCEPTABLE"
+	targetType="HIS:NOT_ACCEPTABLE" />
+<error-mapping sourceType="HTTP:NOT_FOUND"
+	targetType="HIS:NOT_FOUND" />
+<error-mapping sourceType="HTTP:PARSING"
+	targetType="HIS:PARSING" />
+<error-mapping sourceType="HTTP:SECURITY"
+	targetType="HIS:SECURITY" />
+<error-mapping sourceType="HTTP:TIMEOUT"
+	targetType="HIS:TIMEOUT" />
+<error-mapping sourceType="HTTP:TOO_MANY_REQUESTS"
+	targetType="HIS:TOO_MANY_REQUESTS" />
+<error-mapping sourceType="HTTP:UNAUTHORIZED"
+	targetType="HIS:UNAUTHORIZED" />
+<error-mapping sourceType="HTTP:UNSUPPORTED_MEDIA_TYPE"
+	targetType="HIS:UNSUPPORTED_MEDIA_TYPE" />
+<error-mapping sourceType="HTTP:BAD_GATEWAY"
+	targetType="HIS:BAD_GATEWAY" /> 

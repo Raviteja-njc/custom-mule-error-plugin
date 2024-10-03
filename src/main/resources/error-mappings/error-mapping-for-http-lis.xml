@@ -1,0 +1,32 @@
+<!-- Error mappings for HTTP to LIS -->
+
+<error-mapping sourceType="HTTP:BAD_REQUEST"
+	targetType="LIS:BAD_REQUEST" />
+<error-mapping sourceType="HTTP:CLIENT_SECURITY"
+	targetType="LIS:CLIENT_SECURITY" />
+<error-mapping sourceType="HTTP:CONNECTIVITY"
+	targetType="LIS:CONNECTIVITY" />
+<error-mapping sourceType="HTTP:FORBIDDEN"
+	targetType="LIS:FORBIDDEN" />
+<error-mapping sourceType="HTTP:INTERNAL_SERVER_ERROR"
+	targetType="LIS:INTERNAL_SERVER_ERROR" />
+<error-mapping sourceType="HTTP:METHOD_NOT_ALLOWED"
+	targetType="LIS:METHOD_NOT_ALLOWED" />
+<error-mapping sourceType="HTTP:NOT_ACCEPTABLE"
+	targetType="LIS:NOT_ACCEPTABLE" />
+<error-mapping sourceType="HTTP:NOT_FOUND"
+	targetType="LIS:NOT_FOUND" />
+<error-mapping sourceType="HTTP:PARSING"
+	targetType="LIS:PARSING" />
+<error-mapping sourceType="HTTP:SECURITY"
+	targetType="LIS:SECURITY" />
+<error-mapping sourceType="HTTP:TIMEOUT"
+	targetType="LIS:TIMEOUT" />
+<error-mapping sourceType="HTTP:TOO_MANY_REQUESTS"
+	targetType="LIS:TOO_MANY_REQUESTS" />
+<error-mapping sourceType="HTTP:UNAUTHORIZED"
+	targetType="LIS:UNAUTHORIZED" />
+<error-mapping sourceType="HTTP:UNSUPPORTED_MEDIA_TYPE"
+	targetType="LIS:UNSUPPORTED_MEDIA_TYPE" />
+<error-mapping sourceType="HTTP:BAD_GATEWAY"
+	targetType="LIS:BAD_GATEWAY" /> 

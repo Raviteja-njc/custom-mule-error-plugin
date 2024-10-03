@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+  xmlns:module-logger="http://www.mulesoft.org/schema/mule/module-logger"
+  xmlns:azure-service-bus-messaging="http://www.mulesoft.org/schema/mule/azure-service-bus-messaging" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+  xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/azure-service-bus-messaging http://www.mulesoft.org/schema/mule/azure-service-bus-messaging/current/mule-azure-service-bus-messaging.xsd
+http://www.mulesoft.org/schema/mule/module-logger http://www.mulesoft.org/schema/mule/module-logger/current/mule-module-logger.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd">
+  <azure-service-bus-messaging:config name="mph-eip-error-plugin-azure-service-bus"
+    doc:name="Azure Service Bus Messaging Connector Config" doc:id="30b181bd-d917-42c3-9231-30f19f7fd0b1">
+    <azure-service-bus-messaging:sas-connection namespace="${azure.serviceBus.errorQueue.serviceNamespace}"
+      sharedAccessKeyName="${azure.serviceBus.errorQueue.sharedAccessKeyName}" sharedAccessKey="${azure.serviceBus.errorQueue.accessKey}" >
+      <reconnection >
+        <reconnect frequency="${azure.serviceBus.errorQueue.reconnection.frequency}" count="${azure.serviceBus.errorQueue.reconnection.attempts}"/>
+      </reconnection>
+    </azure-service-bus-messaging:sas-connection>
+  </azure-service-bus-messaging:config>
+  <vm:config name="mph-eip-error-plugin-vm-config" doc:name="VM Config" doc:id="09d76f08-6b24-4356-b314-08a6925dc931" >
+    <vm:connection />
+    <vm:queues >
+      <vm:queue queueName="eipErrorVmQueue" queueType="PERSISTENT" />
+    </vm:queues>
+  </vm:config>
+  <sub-flow name="namespace-mapping-for-apikit-errors" doc:id="068a7b8a-36fd-4666-a716-e3a97cac4415" >
+    <module-logger:before-transform doc:name="Before transform" doc:id="3db7e459-6e6a-4dda-a2b6-db4fc4ca94fc" config-ref="MPH_Logger_Config" message='#["APIKIT error namespace mapping"]'/>
+    <ee:transform doc:name="mainErrorObject" doc:id="ffd8826f-ae80-4852-a93b-d2a036a77f36" >
+      <ee:message >
+      </ee:message>
+      <ee:variables >
+        <ee:set-variable variableName="errorObject" ><![CDATA[%dw 2.0
+output application/json
+import * from dw::util::Values
+import * from dw::core::Strings
+---
+if ( !isEmpty(error) ) error update  ["errorType", field("namespace")] with upper(underscore(substringBefore(p('app.name'), "-app"))) else error]]></ee:set-variable>
+      </ee:variables>
+    </ee:transform>
+    <module-logger:after-transform doc:name="After transform" doc:id="b88f4489-d6bc-40c6-ae88-b47dc9c2c0d9" config-ref="MPH_Logger_Config" message='#["APIKIT error namespace mapping complete"]'/>
+  </sub-flow>
+  <error-handler name="mph-eip-common-error-handler" doc:id="7f94c3fb-d6ea-4451-b1c3-d2e2e0968ea7">
+    <!-- APIKit router related exceptions -->
+    <on-error-continue type="APIKIT:BAD_REQUEST" enableNotifications="true" logException="true"
+      doc:name="APIKIT-BAD REQUEST" doc:id="57ee9e27-681f-4f78-a904-06f07aa8edf5">
+      <set-variable value="#[400]" doc:name="Set the HTTP Status - 400" doc:id="851bee57-975f-4fed-9b62-e17d7de70cd7"
+        variableName="httpStatus" />
+      <flow-ref doc:name="namespace-mapping-for-apikit-errors" doc:id="d06c3917-98c1-406b-970d-0be827bdcc91" name="namespace-mapping-for-apikit-errors"/>
+      <flow-ref doc:name="error-structure-routing-flow" doc:id="7ff05ba1-aa6a-4f39-9a64-868ed974b7e3" name="error-structure-routing-flow" />
+    </on-error-continue>
+    <on-error-continue type="APIKIT:METHOD_NOT_ALLOWED" enableNotifications="true" logException="true"
+      doc:name="APIKIT-METHOD NOT ALLOWED" doc:id="4e2d98de-f123-4607-a1d7-b42d1b6fbd93">
+      <set-variable value="#[405]" doc:name="Set the HTTP Status - 405" doc:id="6e8727be-efe9-482a-ab85-f99b112e4892"
+        variableName="httpStatus" />
+      <flow-ref doc:name="namespace-mapping-for-apikit-errors" doc:id="bc735c2d-a465-40d1-8fb0-169649178743" name="namespace-mapping-for-apikit-errors" />
+      <flow-ref doc:name="error-structure-routing-flow" doc:id="98ea58c6-81a8-4fec-9ff0-75c7b520e296" name="error-structure-routing-flow" />
+    </on-error-continue>
+    <on-error-continue type="APIKIT:NOT_ACCEPTABLE" enableNotifications="true" logException="true"
+      doc:name="APIKIT-NOT ACCEPTABLE" doc:id="43b7b649-74e4-4b58-b201-cd8926c3ef15">
+      <set-variable value="#[406]" doc:name="Set the HTTP Status - 406" doc:id="6e8d1992-6cbe-438f-bd34-6d34674ed64c"
+        variableName="httpStatus" />
+      <flow-ref doc:name="namespace-mapping-for-apikit-errors" doc:id="aa3b2826-68aa-4188-b525-b28bfd1fe844" name="namespace-mapping-for-apikit-errors" />
+      <flow-ref doc:name="error-structure-routing-flow" doc:id="ebbf1dd6-e8f2-4c3d-bf7a-dcebd3ccfd52" name="error-structure-routing-flow" />
+    </on-error-continue>
+    <on-error-continue type="APIKIT:NOT_FOUND" enableNotifications="true" logException="true" doc:name="APIKIT-NOT FOUND"
+      doc:id="c340a5e7-9d38-4b1d-930f-86a170af61b4">
+      <set-variable value="#[404]" doc:name="Set the HTTP Status - 404" doc:id="03abc930-f505-47fd-902c-80961a4dad56"
+        variableName="httpStatus" />
+      <flow-ref doc:name="namespace-mapping-for-apikit-errors" doc:id="41493169-0257-4f7a-a47a-f152f0296161" name="namespace-mapping-for-apikit-errors" />
+      <flow-ref doc:name="error-structure-routing-flow" doc:id="b9506f7a-52a9-442f-8c04-6969657683b1" name="error-structure-routing-flow" />
+    </on-error-continue>
+    <on-error-continue type="APIKIT:UNSUPPORTED_MEDIA_TYPE" enableNotifications="true" logException="true"
+      doc:name="APIKIT-UNSUPPORTED MEDIA TYPE" doc:id="7ca7bcd8-2414-4c3f-9e68-e7b14fa263b7">
+      <set-variable value="#[415]" doc:name="Set the HTTP Status - 415" doc:id="c1579c1f-ac04-4c04-b38a-60db583f5430"
+        variableName="httpStatus" />
+      <flow-ref doc:name="namespace-mapping-for-apikit-errors" doc:id="4eda1703-0da3-4454-a0d9-eb91b2827408" name="namespace-mapping-for-apikit-errors" />
+      <flow-ref doc:name="error-structure-routing-flow" doc:id="f9b323fd-9d54-43cb-b581-17c16eeb4e96" name="error-structure-routing-flow" />
+    </on-error-continue>
+    <!-- DFDSAPI related exceptions -->
+    <on-error-continue type="HIS:BAD_REQUEST" enableNotifications="true" logException="true" doc:name="HIS-BAD REQUEST"
+      doc:id="70a8f6eb-88b5-492b-b17b-acc0d94ce654">
+      <set-variable value="#[400]" doc:name="Set the HTTP Status - 400" doc:id="1037d64d-769c-4663-be09-f3ff4b79a8fe"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="f3110ee2-177f-425a-a530-b18b615620ea" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="HIS:CLIENT_SECURITY" enableNotifications="true" logException="true"
+      doc:name="HIS-CLIENT SECURITY" doc:id="85e76e54-9ea3-45fe-8b78-caf419ee832a">
+      <set-variable value="#[401]" doc:name="Set the HTTP Status - 401" doc:id="dc111d81-26ac-4272-aff8-125153220e73"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="43f6b11f-2081-40f9-831d-f469141bc7ae" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="HIS:CONNECTIVITY" enableNotifications="true" logException="true" doc:name="HIS-CONNECTIVITY"
+      doc:id="ef57cd2c-8e6f-4ce3-9f47-558980e2f778">
+      <set-variable value="#[500]" doc:name="Set the HTTP Status - 500" doc:id="67ab5562-8f5e-41e5-9036-578ed65e3f84"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="08a54ad0-f4c1-46d5-b100-6b5f7320d294" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="HIS:FORBIDDEN" enableNotifications="true" logException="true" doc:name="HIS-FORBIDDEN"
+      doc:id="16e4ca95-8f7a-44e4-9c7d-2ab08334eda9">
+      <set-variable value="#[403]" doc:name="Set the HTTP Status - 403" doc:id="47904d47-63c0-430c-854b-0926b36d934d"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="0a321f9a-0a8c-462f-a1eb-0e9ecfcad15e" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="HIS:INTERNAL_SERVER_ERROR" enableNotifications="true" logException="true"
+      doc:name="HIS-INTERNAL SERVER ERROR" doc:id="32ee2240-a4b1-4262-be7f-a22dd384417b">
+      <set-variable value="#[500]" doc:name="Set the HTTP Status - 500" doc:id="fa3d832e-2ee6-4ba7-ae36-f7b499976435"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="7fb8dff8-f8f8-4320-8815-a10341ef6078" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="HIS:METHOD_NOT_ALLOWED" enableNotifications="true" logException="true"
+      doc:name="HIS-METHOD NOT ALLOWED" doc:id="58a8a3ae-6d60-49a4-96e2-08ad8df63a9d">
+      <set-variable value="#[405]" doc:name="Set the HTTP Status - 405" doc:id="e6892800-d5e6-4ec3-97ba-16e5aba9087a"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="37dc0ff9-fd57-4b58-aa38-d365bcdbbd20" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="HIS:NOT_ACCEPTABLE" enableNotifications="true" logException="true"
+      doc:name="HIS-NOT ACCEPTABLE" doc:id="8906cc34-c5f7-4c39-a20f-404f8435b94e">
+      <set-variable value="#[406]" doc:name="Set the HTTP Status - 406" doc:id="7acd0533-4cb7-4be5-9bb3-850b663c3b3d"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="99b7a073-a2f6-42cf-89c3-b21533f1b503" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="HIS:NOT_FOUND" enableNotifications="true" logException="true" doc:name="HIS-NOT FOUND"
+      doc:id="401eab84-9570-404c-ae91-9fc7f02a5c8b">
+      <set-variable value="#[404]" doc:name="Set the HTTP Status - 404" doc:id="3b78da16-d889-4381-a030-3e76e91fd7df"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="73e5bebf-322f-4960-8a22-112b68566937" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="HIS:PARSING" enableNotifications="true" logException="true" doc:name="HIS-PARSING"
+      doc:id="cd16e976-7fae-4a50-90fb-1a37abcafa79">
+      <set-variable value="#[400]" doc:name="Set the HTTP Status - 400" doc:id="d2cbd231-e7c7-4c5b-8471-b2f72dcdb190"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="b9658039-38ab-42e7-a10a-f053e01b1b0f" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="HIS:SECURITY" enableNotifications="true" logException="true" doc:name="HIS-SECURITY"
+      doc:id="a9838394-0b69-4023-9635-476859719180">
+      <set-variable value="#[401]" doc:name="Set the HTTP Status - 401" doc:id="0fe1840d-3883-4ceb-94a8-6eec740e3a9a"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="156d93f2-5d0a-4eb2-95b0-88aca8f4c2b2" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="HIS:TIMEOUT" enableNotifications="true" logException="true" doc:name="HIS-TIMEOUT"
+      doc:id="bcd1a670-c737-4523-a45c-1d09415cd2cd">
+      <set-variable value="#[504]" doc:name="Set the HTTP Status - 504" doc:id="e0948a33-6c68-4258-a867-f39d0f30f466"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="731cb19c-addf-4a0e-a538-1a7f5ebc73f6" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="HIS:TOO_MANY_REQUESTS" enableNotifications="true" logException="true"
+      doc:name="HIS-TOO MANY REQUESTS" doc:id="5c700f00-bddd-4d12-b44a-e0357f03e561">
+      <set-variable value="#[429]" doc:name="Set the HTTP Status - 429" doc:id="543e83bd-bc74-4b78-a0ef-3d5fa639cb98"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="1cb43332-62a7-41b2-aac4-183ba333bb40" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="HIS:UNAUTHORIZED" enableNotifications="true" logException="true" doc:name="HIS-UNAUTHORIZED"
+      doc:id="100c3080-14cc-4272-b324-9b0b96a13119">
+      <set-variable value="#[401]" doc:name="Set the HTTP Status - 401" doc:id="cba79a09-006f-423b-a9b9-76d87f2d0d5b"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="18fc7ccb-7aaa-481f-8357-084de3c21b01" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="HIS:UNSUPPORTED_MEDIA_TYPE" enableNotifications="true" logException="true"
+      doc:name="HIS-UNSUPPORTED MEDIA TYPE" doc:id="da0df24e-b18c-487e-9c4f-e3bc3ba6d319">
+      <set-variable value="#[415]" doc:name="Set the HTTP Status - 415" doc:id="886178ee-7c25-4281-8e76-21fa6b087903"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="545b7290-d0e8-4a38-beb1-7ba7eac4caed" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue enableNotifications="true" logException="true" doc:name="HIS-SERVICE UNAVAILABLE"
+      doc:id="6c629b38-1d6c-430d-9c36-75f5888f32cd" type="HIS:SERVICE_UNAVAILABLE">
+      <set-variable value="#[503]" doc:name="set the HTTP Status - 503" doc:id="498526e0-7fbd-4715-9edb-221fa60ff39f"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="13ad1fea-2cde-45de-989d-bb8e9fd152fd" name="global-error-response-common" />
+    </on-error-continue>
+    <!-- CLINICALPAPI related exceptions -->
+    <on-error-continue type="DFD:BAD_REQUEST" enableNotifications="true" logException="true" doc:name="DFD-BAD REQUEST"
+      doc:id="a1b10231-c058-4466-8042-fbe1985e27ea">
+      <set-variable value="#[400]" doc:name="Set the HTTP Status - 400" doc:id="acbd3974-3c33-4f36-8368-5dcc699bd855"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="0d4bbe60-9dd7-43de-a2ef-625eeb22b3b0" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="DFD:CLIENT_SECURITY" enableNotifications="true" logException="true"
+      doc:name="DFD-CLIENT SECURITY" doc:id="73b7d370-51ed-47b4-bef1-c5dfe0b948f6">
+      <set-variable value="#[401]" doc:name="Set the HTTP Status - 401" doc:id="c52f8bd5-401c-4a62-a31c-2bc2c0c237a6"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="98529293-debd-4116-8073-73d613ad7654" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="DFD:CONNECTIVITY" enableNotifications="true" logException="true" doc:name="DFD-CONNECTIVITY"
+      doc:id="8819f068-de99-4533-996b-39d634f36b7f">
+      <set-variable value="#[500]" doc:name="Set the HTTP Status - 500" doc:id="3cfc04ec-6c30-401f-8cfb-ff2294b68296"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="6224c114-cf42-4c5f-8b02-da0c25056a8a" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="DFD:FORBIDDEN" enableNotifications="true" logException="true" doc:name="DFD-FORBIDDEN"
+      doc:id="7ffd8d22-5b9d-44de-8d17-45e3071fa028">
+      <set-variable value="#[403]" doc:name="Set the HTTP Status - 403" doc:id="269610b7-0274-46a6-b0ca-7cd2df56c78c"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="186d75e6-e8ae-4ad5-ae89-46a736cd7a33" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="DFD:INTERNAL_SERVER_ERROR" enableNotifications="true" logException="true"
+      doc:name="DFD-INTERNAL SERVER ERROR" doc:id="814ac6f7-f6a3-47e7-9ce4-453eef95785a">
+      <set-variable value="#[500]" doc:name="Set the HTTP Status - 500" doc:id="da641c8f-94d0-4cdb-a224-926634efca0a"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="9d1ba880-fd41-4a6c-bde8-c63c99fec172" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="DFD:METHOD_NOT_ALLOWED" enableNotifications="true" logException="true"
+      doc:name="DFD-METHOD NOT ALLOWED" doc:id="354b01b6-47e3-4c8e-bce3-81a8f6b99338">
+      <set-variable value="#[405]" doc:name="Set the HTTP Status - 405" doc:id="8486c967-9be7-4522-8d61-f4e129f4737e"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="735ae75a-8441-4f8d-ab5e-f81910399492" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="DFD:NOT_ACCEPTABLE" enableNotifications="true" logException="true"
+      doc:name="DFD-NOT ACCEPTABLE" doc:id="f9364763-6ec5-4ed2-a229-4814c88d84ab">
+      <set-variable value="#[406]" doc:name="Set the HTTP Status - 406" doc:id="7cd0d738-9cb7-4a6e-bb6c-d157f34d7945"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="0c96b7d9-432b-49ad-b0fe-b89351dc8597" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="DFD:NOT_FOUND" enableNotifications="true" logException="true" doc:name="DFD-NOT FOUND"
+      doc:id="7a598b55-5062-4f89-9f31-0950904142cc">
+      <set-variable value="#[404]" doc:name="Set the HTTP Status - 404" doc:id="55f7485f-1d88-4a5f-aa92-709c3c7bf3ee"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="0ccbfc42-98fb-4a8d-9335-72645c809889" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="DFD:PARSING" enableNotifications="true" logException="true" doc:name="DFD PARSING"
+      doc:id="2b7fe97b-3088-4c06-9cf2-34e123b09de1">
+      <set-variable value="#[400]" doc:name="Set the HTTP Status - 400" doc:id="6b799ba7-e3d3-4539-82dc-5e041c150eda"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="2c7d5270-a044-47cb-87f1-cdfc21f72f65" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="DFD:SECURITY" enableNotifications="true" logException="true" doc:name="DFD-SECURITY"
+      doc:id="5c492bc1-5e89-40ea-88ca-ad788ef58884">
+      <set-variable value="#[401]" doc:name="Set the HTTP Status - 401" doc:id="8bcbcf93-8756-4128-908b-c30755a52aa5"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="56d5ba4b-b7aa-4282-afbb-a034a5b03df2" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="DFD:TIMEOUT" enableNotifications="true" logException="true" doc:name="DFD-TIMEOUT"
+      doc:id="19515e98-2f74-40d2-99f3-500bb5c7980c">
+      <set-variable value="#[504]" doc:name="Set the HTTP Status - 504" doc:id="7419afd7-8f6a-409f-8411-973067935d7d"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="2c32f808-9081-435f-854d-8dcc91067cf4" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="DFD:TOO_MANY_REQUESTS" enableNotifications="true" logException="true"
+      doc:name="DFD-TOO MANY REQUESTS" doc:id="8bc37ace-2e41-4ce4-8256-bb234a714fc7">
+      <set-variable value="#[429]" doc:name="Set the HTTP Status - 429" doc:id="2ae28d21-0f27-4404-a726-968a24e6fd9e"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="eeb597d5-82f8-4290-8a53-a49f10cfe86c" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="DFD:UNAUTHORIZED" enableNotifications="true" logException="true" doc:name="DFD-UNAUTHORIZED"
+      doc:id="484651db-9be9-401b-b330-238945d4c4cb">
+      <set-variable value="#[401]" doc:name="Set the HTTP Status - 401" doc:id="bc7aef15-f5f6-4f9e-a898-e1fe24f47270"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="8d51d932-ff2c-4600-ad05-336db601626c" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue type="DFD:UNSUPPORTED_MEDIA_TYPE" enableNotifications="true" logException="true"
+      doc:name="DFD-UNSUPPORTED MEDIA TYPE" doc:id="985773c6-637f-444a-bfc1-64972c392060">
+      <set-variable value="#[415]" doc:name="Set the HTTP Status - 415" doc:id="074e8b15-c8b6-4998-bbed-8e7f8594affe"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="d3f1b02a-7107-4187-b0f5-dc13d52a9bda" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue enableNotifications="true" logException="true" doc:name="DFD-SERVICE UNAVAILABLE"
+      doc:id="d666bb41-37fb-4649-94ad-ebf86d03b548" type="DFD:SERVICE_UNAVAILABLE">
+      <set-variable value="#[503]" doc:name="set the HTTP Status - 503" doc:id="fbaa7564-b27c-41bc-b427-fe28218c4249"
+        variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="8e59cd9b-4619-410c-ac11-5c49bf92aefd" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue enableNotifications="true" logException="true" doc:name="MPH_EIP_DFD_EAPI-BAD_REQUEST" doc:id="01e772d8-3dca-4d4e-a9f5-4a4d6eb51814" type="MPH_EIP_DFD_EAPI:BAD_REQUEST">
+      <set-variable value="#[400]" doc:name="set the HTTP Status - 400" doc:id="5d80a037-1f9b-4ff0-8a06-96283101e63a" variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="ce890bb2-fa04-45f4-8d60-b14ea3ad32bb" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue enableNotifications="true" logException="true" doc:name="MPH_EIP_CLINICAL_PAPI-BAD_REQUEST" doc:id="d34ec0c8-ac37-4e7c-86d3-3d67067a8c7a" type="MPH_EIP_CLINICAL_PAPI:BAD_REQUEST">
+      <set-variable value="#[400]" doc:name="set the HTTP Status - 400" doc:id="17bd6a0e-087c-40d0-9130-861c76b83dc0" variableName="httpStatus" />
+      <flow-ref doc:name="global-error-response" doc:id="f48583d6-f34b-4913-8cae-d447fee2c2a7" name="global-error-response-common" />
+    </on-error-continue>
+    <on-error-continue enableNotifications="true" logException="true" doc:name="ANY"
+      doc:id="1c3c7f1d-711e-4de0-a4d0-a731f74d85e8" type="ANY">
+      <set-variable value="#[if(!isEmpty(vars.httpStatus)) vars.httpStatus else if (!isEmpty(error.muleMessage.attributes.StatusCode)) error.muleMessage.attributes.StatusCode else 500]" doc:name="set StatusCode for ANY"
+        doc:id="7b2f9b44-7d51-43e2-8df0-9039d3abe01a" variableName="httpStatus" />
+      <flow-ref doc:name="error-structure-routing-flow" doc:id="52c6dd5f-84d3-4c75-9dfc-dde35e72cd50" name="error-structure-routing-flow"/>
+    </on-error-continue>
+  </error-handler>
+  <sub-flow name="error-structure-routing-flow" doc:id="71439e33-8e5d-48ed-b04e-849b3ade7d00" >
+    <set-variable value='#[output application/json&#10;var requestUri = if(!isEmpty(vars.inboundMessage.endpoint)) vars.inboundMessage.endpoint else attributes.requestUri&#10;var isFhir = requestUri splitBy  "/" contains "fhir"&#10;---&#10;{&#10;    "isFhir": isFhir&#10;}]' doc:name="isFhirRequest" doc:id="85d7c8ab-3820-40dc-8a08-340b4862d4c1" variableName="isFhirRequest"/>
+    <choice doc:name="Choice" doc:id="0d8b8a93-418e-4a9b-a430-ee11e9762618">
+        <when expression='#[!(vars.isFhirRequest.isFhir)]'>
+          <flow-ref doc:name="global-non-fhir-error-response-flow" doc:id="1fcb065e-eb8d-4a56-8c6f-e131379e7974" name="global-non-fhir-error-response-flow" />
+        </when>
+        <otherwise>
+          <flow-ref doc:name="global-error-response" doc:id="4d442be7-3b64-417c-9e52-e4883d3fd985" name="global-error-response-common" />
+        </otherwise>
+      </choice>
+  </sub-flow>
+  <flow name="global-non-fhir-error-response-flow" doc:id="bde19f42-a9bd-423a-8f49-89408660d09b" >
+    <module-logger:exception doc:name="Exception" doc:id="9ab3d834-773e-427b-b00d-edf4b3efb725" config-ref="MPH_Logger_Config" message='#["exception occured at: " ++ error.errorType.namespace as String default ""]'/>
+    <ee:transform doc:name="Set standard error response payload" doc:id="f1058ace-ea40-4b8d-901b-f47bfaf47e85" >
+      <ee:message >
+        <ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var namespace = if(!isEmpty(vars.errorObject)) vars.errorObject.errorType.namespace else error.errorType.namespace
+var identifier = if(!isEmpty(vars.errorObject)) vars.errorObject.errorType.identifier else error.errorType.identifier
+var errorMessage = if(!isEmpty(vars.errorObject.errorMessage.payload.message)) vars.errorObject.errorMessage.payload.message 
+		else (if(!isEmpty(error.errorMessage.payload.message))error.errorMessage.payload.message else error.description)
+---
+{
+  "errorCode": vars.httpStatus,
+  "errorType": namespace ++ ":" ++ identifier,
+  "errorMessage": errorMessage,
+  "correlationId": vars.inboundMessage.correlationId,
+  "timestamp": now() as DateTime,
+  "environment": p('mule.env'),
+  "sourceSystem": vars.inboundMessage.sourceSystem,
+  "targetSystem": vars.inboundMessage.targetSystem,
+  "endpoint": vars.inboundMessage.endpoint
+}]]></ee:set-payload>
+      </ee:message>
+    </ee:transform>
+    <vm:publish queueName="eipErrorVmQueue" doc:name="to eipErrorVmQueue" doc:id="08e90d1b-5c56-4fa2-92d3-40f07e04dc0b" config-ref="mph-eip-error-plugin-vm-config" >
+      <vm:content ><![CDATA[#[output application/json
+---
+{
+	"queueMessage": payload,
+	"destinationQueueName": vars.destinationQueueName
+}]]]></vm:content>
+    </vm:publish>
+    <flow-ref doc:name="error-remove-variable-flow" doc:id="dbba9248-77b3-4ba0-a207-fa972074e570" name="error-remove-variable-flow" />
+  </flow>
+  <flow name="global-error-response-common" doc:id="c91cf11d-6505-4c1f-8178-1a60d32d4bb1">
+    <module-logger:exception doc:name="Exception" doc:id="b4e36c42-16d8-4286-940f-592d482e54df"
+      config-ref="MPH_Logger_Config" message='#["exception occured at: " ++ error.errorType.namespace as String default ""]' correlationId="#[vars.inboundMessage.correlationId]" resourcePath="#[vars.inboundMessage.endpoint]" sizeOfPayload="#[sizeOf(vars.inboundMessage.originalPayload) default -1]" sourceSystem="#[vars.inboundMessage.sourceSystem]" targetSystem="#[vars.inboundMessage.targetSystem]" service="#[vars.inboundMessage.service]"/>
+    <choice doc:name="Choice" doc:id="20cb9386-2c13-4cd1-ab54-f015670f4ef2" >
+      <when expression="#[!isEmpty(vars.errorObject)]">
+        <ee:transform doc:name="mainErrorObject and httpStatus" doc:id="5ff79f7b-db75-49a9-b392-47f30a947d1a" >
+          <ee:message >
+          </ee:message>
+          <ee:variables >
+            <ee:set-variable variableName="mainErrorObject" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "originalError": vars.errorObject.errorMessage.payload,
+    "originalErrorType": vars.errorObject.errorType.namespace ++ ":" ++ vars.errorObject.errorType.identifier
+}]]></ee:set-variable>
+            <ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0 output application/json --- if ( !isEmpty(vars.errorObject.errorMessage.attributes.statusCode) ) vars.errorObject.errorMessage.attributes.statusCode else if ( !isEmpty(vars.httpStatus) ) vars.httpStatus  else 500]]></ee:set-variable>
+          </ee:variables>
+        </ee:transform>
+      </when>
+    </choice>
+    <set-variable value="#[output application/json&#10;---&#10;{&#10;	errorCode: vars.httpStatus default 500,&#10;	errorType: if(!isEmpty(vars.mainErrorObject.originalErrorType))vars.mainErrorObject.originalErrorType else error.errorType.namespace ++ &quot;:&quot; ++ error.errorType.identifier,&#10;	errorDescription: if(!isEmpty(vars.errorObject)) vars.errorObject.description else error.description,&#10;	correlationId: vars.inboundMessage.correlationId,&#10;	timeStamp: now(),&#10;	environment: Mule::p('mule.env'),&#10;	sourceSystem: vars.inboundMessage.sourceSystem,&#10;	targetSystem: vars.inboundMessage.targetSystem,	&#10;	endpoint: vars.inboundMessage.endpoint,&#10;}]" doc:name="commonErrorStructure" doc:id="3c6a5c42-30b4-4a6e-b887-b329cfa698f2" variableName="commonErrorStructure"/>
+    <ee:transform doc:name="Set Payload OperationOutcome" doc:id="a7f0fe23-c082-47e8-9479-4cdfc9f6a430" >
+      <ee:message >
+        <ee:set-payload resource="dataweave/p-operation-outcome-mapping.dwl" />
+      </ee:message>
+    </ee:transform>
+    <set-variable
+      value='#[%dw 2.0&#10;output application/json&#10;var commonErrorStructure = vars.commonErrorStructure&#10;---&#10;{&#10;	timeStamp: commonErrorStructure.timeStamp,&#10;	correlationId: commonErrorStructure.correlationId,&#10;	payload: vars.inboundMessage.originalPayload,&#10;	message: payload,&#10;	errorType: commonErrorStructure.errorType,&#10;	errorDescription: commonErrorStructure.errorDescription,&#10;	endpoint: commonErrorStructure.endpoint,&#10;	sourceSystem: commonErrorStructure.sourceSystem,&#10;	targetSystem: commonErrorStructure.targetSystem,&#10;}]'
+      doc:name="Set Queue Message" doc:id="eda8c576-2552-4ffe-9e71-43ace8b4af5c" variableName="QueueMessage" />
+    <vm:publish doc:name="to eipErrorVmQueue" doc:id="31e10dfb-721c-46ea-b0f6-a81698a2f7b0" config-ref="mph-eip-error-plugin-vm-config" queueName="eipErrorVmQueue" >
+      <vm:content ><![CDATA[#[output application/json
+---
+{
+	"queueMessage": vars.QueueMessage,
+	"destinationQueueName": vars.destinationQueueName
+}]]]></vm:content>
+    </vm:publish>
+    <flow-ref doc:name="error-remove-variable-flow" doc:id="ba78035d-1efc-4d37-9ba8-f25c82c3a5af" name="error-remove-variable-flow" />
+    <set-variable value='#[{&#10;	"content-type": "application/fhir+json"&#10;}]' doc:name="Set outboundHeaders" doc:id="2584e5fe-08dc-4bd6-ae50-af309bfdca6e" variableName="outboundHeaders"/>
+  </flow>
+  <flow name="publish-error-message-to-ASB-Flow" doc:id="ecabd1ee-62f3-4ecd-9f7f-8a76166b9c17" >
+    <vm:listener queueName="eipErrorVmQueue" doc:name="from eipErrorVmQueue" doc:id="6af5a241-5bfc-4913-8920-96aab508f27c" config-ref="mph-eip-error-plugin-vm-config"/>
+    <try doc:name="Try" doc:id="ce65a5f1-b6ea-410a-8055-27c54cb45ed1" >
+      <azure-service-bus-messaging:send doc:name="send message to service Queue" doc:id="6201ed3e-0fb5-4d89-9b7d-fdbd6d1217ae" config-ref="mph-eip-error-plugin-azure-service-bus" destinationName="#[payload.destinationQueueName default p('azure.serviceBus.errorQueue.destinationName')]">
+        <azure-service-bus-messaging:body ><![CDATA[#[payload.queueMessage]]]></azure-service-bus-messaging:body>
+    </azure-service-bus-messaging:send>
+      <error-handler >
+        <on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="c9aed97d-b0c8-4fbd-aa04-e0b4647f7527" >
+          <module-logger:exception doc:name="Exception" doc:id="c2e31f75-2d5d-48d8-96ce-73162496414e" config-ref="MPH_Logger_Config" message="#[&quot;mph-eip-error-plugin failure while sending message to queue: &quot; ++ p('azure.serviceBus.errorQueue.destinationName')]"/>
+        </on-error-continue>
+      </error-handler>
+    </try>
+    <flow-ref doc:name="error-remove-variable-flow" doc:id="fc7e7cf2-fbd4-4533-b450-776a70253cb9" name="error-remove-variable-flow" />
+  </flow>
+  <flow name="error-remove-variable-flow" doc:id="2e7ceffc-44f9-43ec-bee5-8f70fd206b27">
+    <foreach doc:name="For Each" doc:id="45f888f0-8b5b-4e2e-9b68-935439bea42b"
+      collection='#[(vars - "httpStatus" - "outboundHeaders") pluck ($$)]'>
+      <remove-variable doc:name="Remove Variable" doc:id="9a857573-42a9-4c61-9dcb-815f5858f054" variableName="#[payload]" />
+    </foreach>
+  </flow>
+</mule>

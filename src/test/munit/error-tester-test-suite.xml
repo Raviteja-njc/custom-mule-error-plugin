@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="error-tester-test-suite.xml">
+		<munit:parameterizations
+			file="error-test-parameters.yaml" />
+	</munit:config>
+	<munit:test
+		name="error-tester-test-suite-error-testerFlowTest"
+		doc:id="e8229ee5-416e-422b-bfb4-86a25e4a4e45" description="Test">
+		<munit:behavior>
+      <munit:set-event doc:name="Set Event"
+				doc:id="215cbcd2-9d2f-4078-862b-87524a1972e4">
+        <munit:payload value="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	&quot;errorType&quot;: Mule::p('errortype')&#10;}]" />
+        <munit:attributes value="#[{&#10;	queryParams:{&#10;		namespace: Mule::p('namespace')&#10;	}&#10;}]" />
+			</munit:set-event>
+			<munit-tools:mock-when
+				doc:name="mock azure service bus (send)"
+				doc:id="36c2c453-dc8b-4240-bd0d-b93ca7519a71"
+				processor="azure-service-bus-messaging:send">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						whereValue="send message to service Queue"
+						attributeName="doc:name" />
+					<munit-tools:with-attribute
+						whereValue="send message to service Queue"
+						attributeName="doc:name" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<set-variable value="#[output application/json --- {&quot;endpoint&quot;: p('endpoint')}]" doc:name="inboundMessage" doc:id="c8ca675e-6153-4e20-a27a-c1d655ef49d0" variableName="inboundMessage" />
+      <flow-ref doc:name="Flow-ref to error-testerFlow"
+				doc:id="08c03940-e568-45e2-80a0-41169df35c9a"
+				name="error-testerFlow" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals
+				doc:name="Assert httpStatus"
+				doc:id="3de16bf7-a7e1-4be3-a5a6-c79247a2f56f"
+				actual="#[vars.httpStatus as String]"
+				expected="${expectedstatuscode}" message="status is not matching" />
+		</munit:validation>
+	</munit:test>
+</mule>

@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_c91cf11d_6505_4c1f_8178_1a60d32d4bb1_Output_Variables_QueueMessage = Any
+

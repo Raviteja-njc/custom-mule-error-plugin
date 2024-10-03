@@ -1,0 +1,10 @@
+azure:
+  serviceBus:
+    errorQueue: 
+      serviceNamespace: "serviceNamespace"
+      sharedAccessKeyName: "sharedAccessKeyName"
+      accessKey: "accessKey"
+      destinationName: "destinationName"
+      reconnection:
+        frequency: "2000"
+        attempts: "3"

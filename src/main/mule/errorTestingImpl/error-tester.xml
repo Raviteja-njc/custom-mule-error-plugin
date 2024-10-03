@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:module-logger="http://www.mulesoft.org/schema/mule/module-logger" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+  xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+  xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/module-logger http://www.mulesoft.org/schema/mule/module-logger/current/mule-module-logger.xsd">
+  <http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config"
+    doc:id="91533246-79fe-4aba-9d9b-86a5ad5c851f">
+    <http:listener-connection host="0.0.0.0" port="9988" />
+  </http:listener-config>
+  <configuration doc:name="Configuration" doc:id="65087926-6dd2-4ddb-85e5-e8a5f35a760b"
+    defaultErrorHandler-ref="mph-eip-common-error-handler" />
+  <configuration-properties doc:name="Configuration properties" doc:id="2626d5b9-df2f-4df0-80d6-90b3ab07665a"
+    file="properties\config-api-error-queue.yaml" />
+  <module-logger:config name="MPH_Logger_Config" doc:name="MPH Logger Config"
+    doc:id="8ed6a77b-ed45-4f69-89a7-4651e1ec1e59" appVersion="#[app.version]" />
+  <flow name="error-testerFlow" doc:id="86384453-ba0a-4c98-8638-500aefb86fd5">
+    <http:listener doc:name="Listener" doc:id="4a79b284-dff2-40ce-867e-6d689494d496" config-ref="HTTP_Listener_config"
+      path="/test">
+      <http:error-response statusCode="#[vars.httpStatus]" />
+    </http:listener>
+    <ee:transform doc:name="initial variables" doc:id="28218f77-cff4-46e5-94fd-ab9505aab0cf" >
+      <ee:message >
+      </ee:message>
+      <ee:variables >
+        <ee:set-variable resource="dataweave/initialVariable.dwl" variableName="inboundMessage" />
+      </ee:variables>
+    </ee:transform>
+    <choice doc:name="Choice" doc:id="b6065e95-afd4-4b10-b780-c2416899c5b6">
+      <when expression='#[attributes.queryParams.namespace != "APIKIT"]'>
+        <flow-ref doc:name="raise-error-flow" doc:id="241e1af6-9ea8-473e-b0d7-669e44e9e940" name="raise-error-flow" />
+      </when>
+      <when expression='#[attributes.queryParams.namespace == "APIKIT"]'>
+        <flow-ref doc:name="apikit-error-tester-flow" doc:id="4cbcfba1-24ec-4b57-acf8-ad6e6a8816ee" name="apikit-error-tester-flow" />
+      </when>
+    </choice>
+  </flow>
+  <flow name="raise-error-flow" doc:id="c3855de2-81de-4ebc-80ab-b0142fc88636">
+    <flow-ref doc:name="custom-error-mappings-flow" doc:id="df455493-916a-4dc5-b2ef-945725861ba9" name="custom-error-mappings-flow" />
+  </flow>
+  <flow name="apikit-error-tester-flow" doc:id="91be3a26-7521-4da9-a269-1f8b4e2e02ac">
+    <choice doc:name="Choice" doc:id="13e8870c-9ffe-43e3-a99c-966a03e55612">
+      <when expression='#[payload.errorType == "APIKIT:BAD_REQUEST"]'>
+        <raise-error doc:name="APIKIT:BAD_REQUEST" doc:id="a23717e2-5fa0-47cd-a63b-4155da7471d4" type="APIKIT:BAD_REQUEST"
+          description="bad request" />
+      </when>
+      <when expression='#[payload.errorType == "APIKIT:METHOD_NOT_ALLOWED"]'>
+        <raise-error doc:name="APIKIT:METHOD_NOT_ALLOWED" doc:id="8fea5a28-b0b9-4c6b-b4e6-985ae9d0e966"
+          type="APIKIT:METHOD_NOT_ALLOWED" description="method not allowed" />
+      </when>
+      <when expression='#[payload.errorType == "APIKIT:NOT_FOUND"]'>
+        <raise-error doc:name="APIKIT:NOT_FOUND" doc:id="d9b6fdd8-ddac-424b-b3f4-407362e72946" type="APIKIT:NOT_FOUND"
+          description="not found" />
+      </when>
+      <when expression='#[payload.errorType == "APIKIT:NOT_ACCEPTABLE"]'>
+        <raise-error doc:name="APIKIT:NOT_ACCEPTABLE" doc:id="a2da70d2-3c3a-47ee-b634-c30502631ed2" type="APIKIT:NOT_ACCEPTABLE"
+          description="not acceptable" />
+      </when>
+      <when expression='#[payload.errorType == "APIKIT:UNSUPPORTED_MEDIA_TYPE"]'>
+        <raise-error doc:name="APIKIT:UNSUPPORTED_MEDIA_TYPE" doc:id="a0f0905b-79d1-48e4-b7ee-6f2b727fad87"
+          type="APIKIT:UNSUPPORTED_MEDIA_TYPE" description="unsupported media type" />
+      </when>
+      <otherwise>
+        <set-variable value="#[200]" doc:name="Set dummy httpStatus" doc:id="938d73fc-6ceb-407c-96e6-46771c3239fa"
+          variableName="httpStatus" />
+        <set-payload value='#[output application/json --- {&#10;	"resourceType": "OperationOutcome"&#10;}]'
+          doc:name="Set dummy payload" doc:id="e6201884-4894-43b2-9a40-326fbff94476" />
+      </otherwise>
+    </choice>
+  </flow>
+</mule>
